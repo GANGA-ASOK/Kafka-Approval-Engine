@@ -177,11 +177,18 @@ Environment variables (a `.env` in `backend/` is supported): `MONGODB_URL`, `DAT
 ## Testing
 
 ```bash
-cd backend && uv run pytest        # uses EVENT_BUS=memory; no Kafka needed
+cd backend && uv run pytest -q     # 46 tests, EVENT_BUS=memory with mongomock + fakeredis; no Docker needed
 cd frontend && npm run lint && npm run build
+python scripts/demo_flow.py        # live end-to-end check against a running stack (real Kafka)
 ```
 
-(Test layout is owned by the backend team; check `backend/tests/` for what currently exists.)
+`backend/tests/` covers:
+- `test_rules.py`: rule matching across the amount tiers, fallback, departments and request types.
+- `test_workflow_flow.py`: the full approve chain, reject (remaining steps SKIPPED), cancel, list filters, route preview, and workflow versioning with in-flight snapshots.
+- `test_auth_rbac.py`: JWT auth, role denials, self-approval block, admin-only routes, and that public sign-up creates employees only.
+- `test_reliability.py`: duplicate-event idempotency, `[fail]` retry → DLQ → replay and discard, `Idempotency-Key` replay, SLA escalation through the chain and the Redis lock, audit fan-out, and the Mongo outbox.
+
+The frontend has no automated test suite yet. It was smoke-tested against the live API with Playwright.
 
 ## Project layout
 
@@ -196,9 +203,23 @@ relay/
 
 ## Status and roadmap
 
-Phase 1 delivered JWT auth and request CRUD. Phase 2 (this branch) adds the Kafka-based workflow engine, retry/DLQ, SLA
-escalation, audit log, RBAC and the UI. Whether every item is finished depends on the concurrent backend/frontend work;
-treat `docs/CONTRACT.md` as the target and the code as the source of truth.
+Phase 1 delivered JWT auth and request CRUD. Phase 2 (branch `feat/phase2-workflow-engine`) delivered everything else:
+- the Kafka-based workflow engine with dynamic routing;
+- SLA tracking with automated escalation;
+- idempotent consumers with retry topic, DLQ and admin replay;
+- a Mongo outbox fallback;
+- JWT/RBAC REST APIs;
+- the React UI, including the audit-log dashboard.
+
+It was verified with the backend test suite and with live runs against real Kafka, MongoDB and Redis.
+
+Known gaps:
+- no CI pipeline;
+- no frontend automated tests;
+- no notifications;
+- single Kafka broker with RF 1 (dev only);
+- no refresh tokens (`SECRET_KEY` must come from the environment in production);
+- audit summary chips count only the current page.
 
 Ideas for later: multi-partition consumer scaling across instances, schema registry for events, notifications (email/Slack),
 delegation and out-of-office routing, metrics/tracing (Prometheus, OpenTelemetry).
