@@ -1,32 +1,25 @@
-# React + TypeScript + Vite
+# RELAY frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19, TypeScript, Vite 8, Tailwind v4, TanStack Query.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # http://localhost:5173 (expects the API at http://localhost:8000/api)
+npm run build    # type-check + production build
+npm run lint     # oxlint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Set `VITE_API_URL` to point at a different API (see `.env.example`). Demo accounts are one click away on the sign-in page.
+
+| Route | Who | What |
+|---|---|---|
+| `/login`, `/register` | everyone | Sign in (with demo accounts) / create an employee account |
+| `/` | signed in | Overview: key numbers, inbox preview, recent requests, routing guide |
+| `/requests/new` | signed in | New request with live approval-route preview |
+| `/requests` | signed in | My requests (approvers can switch to everyone's) |
+| `/requests/:id` | signed in | Request detail: route stepper, decision/cancel, activity feed |
+| `/inbox` | Manager, Finance, Director, Admin | Approvals inbox with approve/reject |
+| `/audit` | signed in (employees see their own) | Audit log dashboard |
+| `/admin/workflows`, `/admin/dlq`, `/admin/users` | Admin | Workflow rules editor, failed events, users |
+
+Design and integration decisions: `../docs/assumptions/frontend.md`.
